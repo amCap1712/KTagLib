@@ -12,11 +12,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.simplecityapps.ktaglib.AudioFile
 import com.simplecityapps.ktaglib.KTagLib
+import com.simplecityapps.ktaglib.TaglibUtils
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import java.util.HashMap
 
 class MainActivity : AppCompatActivity() {
 
@@ -129,9 +131,7 @@ class MainActivity : AppCompatActivity() {
             documents.forEach { document ->
                 contentResolver.openFileDescriptor(document.uri, "r")?.use { pfd ->
                     try {
-                        tagLib.getAudioFile(pfd.fd, document.uri.toString(), document.displayName.substringBeforeLast(".") ?: "Unknown")?.let { audioFile ->
-                            emit(Pair(audioFile, document))
-                        }
+                        emit(Pair(TaglibUtils.getAudioFile(pfd.fd, document.uri.toString(), document.displayName.substringBeforeLast(".")), document))
                     } catch (e: IllegalStateException) {
                         Log.e("MainActivity", "Failed to get audio file: ", e)
                     }
