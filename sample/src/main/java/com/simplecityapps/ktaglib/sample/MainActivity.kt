@@ -28,9 +28,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var documentAdapter: DocumentAdapter
 
-    private val tagLib = KTagLib()
-
-
     // Lifecycle
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -129,9 +126,7 @@ class MainActivity : AppCompatActivity() {
             documents.forEach { document ->
                 contentResolver.openFileDescriptor(document.uri, "r")?.use { pfd ->
                     try {
-                        tagLib.getAudioFile(pfd.fd, document.uri.toString(), document.displayName.substringBeforeLast(".") ?: "Unknown")?.let { audioFile ->
-                            emit(Pair(audioFile, document))
-                        }
+                        emit(Pair(KTagLib.getAudioFile(pfd.fd, document.uri.toString(), document.displayName.substringBeforeLast(".")), document))
                     } catch (e: IllegalStateException) {
                         Log.e("MainActivity", "Failed to get audio file: ", e)
                     }
