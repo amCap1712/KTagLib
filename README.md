@@ -3,7 +3,21 @@
 Kotlin bindings for [TagLib](https://github.com/taglib/taglib)
 
 Gradle:
-`implementation("com.github.timusus:KTagLib:master-SNAPSHOT")`
+
+Step 1.Add it in your root build.gradle at the end of repositories:
+
+	allprojects {
+		repositories {
+			...
+			maven { url 'https://jitpack.io' }
+		}
+	}
+
+Step 2. Add the dependency
+
+	dependencies {
+	        implementation 'com.github.SomalRudra:KTagLib:0.4'
+	}
 
 See the sample app for an example of reading tags, using the Storage Access Framework.
 
