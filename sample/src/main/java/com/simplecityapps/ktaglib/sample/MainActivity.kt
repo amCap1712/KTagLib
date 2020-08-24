@@ -123,7 +123,7 @@ class MainActivity : AppCompatActivity() {
             documents.forEach { document ->
                 contentResolver.openFileDescriptor(document.uri, "r")?.use { pfd ->
                     try {
-                        emit(Pair(AudioFile.getAudioFile(pfd.fd, document.uri.toString(),
+                        emit(Pair(AudioFile.getAudioFile(pfd.detachFd(), document.uri.toString(),
                                 document.displayName.substringBeforeLast(".")), document))
                     } catch (e: IllegalStateException) {
                         Log.e("MainActivity", "Failed to get audio file: ", e)
