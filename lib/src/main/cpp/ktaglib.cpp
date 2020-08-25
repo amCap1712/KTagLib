@@ -16,9 +16,7 @@
 #include <toolkit/tmap.h>
 #include <toolkit/tpicturemap.h>
 #include <toolkit/tdebuglistener.h>
-
-#include "unique_fd.h"
-
+#include <android/log.h>
 
 class DebugListener : public TagLib::DebugListener {
     void printMessage(const TagLib::String &msg) override {
@@ -99,11 +97,10 @@ extern "C" void JNI_OnUnload(JavaVM *vm, void *reserved) {
     TagLib::setDebugListener(nullptr);
 }
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_com_simplecityapps_ktaglib_KTagLib_getArtwork(JNIEnv *env, jclass clazz, jint fd_) {
+extern "C" JNIEXPORT jbyteArray JNICALL
+Java_com_simplecityapps_ktaglib_KTagLib_getArtwork(JNIEnv *env, jclass clazz, jint fd) {
 
-    unique_fd uniqueFd = unique_fd(fd_);
-
-    auto stream = std::make_unique<TagLib::FileStream>(uniqueFd.get(), true);
+    auto stream = std::make_unique<TagLib::FileStream>(fd, true);
     TagLib::FileRef fileRef(stream.get());
 
     jbyteArray result = nullptr;
@@ -162,7 +159,6 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_com_simplecityapps_ktaglib_KTagLib_
         }
     }
 
-    uniqueFd.release();
     return result;
 }
 
@@ -182,9 +178,8 @@ static void addIntegerProperty(JNIEnv *env, jobject properties, const char* key,
 extern "C"
 JNIEXPORT jobject JNICALL
 Java_com_simplecityapps_ktaglib_KTagLib_getMetadata(JNIEnv *env, jclass clazz, jint file_descriptor) {
-    unique_fd uniqueFd = unique_fd(file_descriptor);
 
-    auto stream = std::make_unique<TagLib::FileStream>(uniqueFd.get(), true);
+    auto stream = std::make_unique<TagLib::FileStream>(file_descriptor, true);
     TagLib::FileRef fileRef(stream.get());
 
     jobject properties = env->NewObject(globalHashMapClass, hashMapInit);
@@ -205,12 +200,10 @@ Java_com_simplecityapps_ktaglib_KTagLib_getMetadata(JNIEnv *env, jclass clazz, j
         addIntegerProperty(env, properties, "SAMPLERATE", audioProperties->sampleRate());
 
         struct stat statbuf{};
-        fstat(uniqueFd.get(), &statbuf);
+        fstat(file_descriptor, &statbuf);
         addIntegerProperty(env, properties, "LAST_MODIFIED", statbuf.st_mtime * 1000L);
         addIntegerProperty(env, properties, "SIZE", statbuf.st_size);
     }
-
-    uniqueFd.release();
 
     return properties;
 }
@@ -218,9 +211,8 @@ Java_com_simplecityapps_ktaglib_KTagLib_getMetadata(JNIEnv *env, jclass clazz, j
 extern "C"
 JNIEXPORT jboolean JNICALL
 Java_com_simplecityapps_ktaglib_KTagLib_writeMetadata(JNIEnv *env, jclass clazz, jint file_descriptor, jobject properties) {
-    unique_fd uniqueFd = unique_fd(file_descriptor);
 
-    auto stream = std::make_unique<TagLib::FileStream>(uniqueFd.get(), false);
+    auto stream = std::make_unique<TagLib::FileStream>(file_descriptor, false);
     TagLib::FileRef fileRef(stream.get());
 
     jboolean isSuccessful = false;
@@ -242,8 +234,6 @@ Java_com_simplecityapps_ktaglib_KTagLib_writeMetadata(JNIEnv *env, jclass clazz,
         fileRef.setProperties(taglibProperties);
         isSuccessful = fileRef.save();
     }
-
-    uniqueFd.release();
 
     return isSuccessful;
 }
